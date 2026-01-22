@@ -3,10 +3,8 @@ from app.config import get_settings
 
 settings = get_settings()
 
-# Public client for user-context operations
 supabase: Client = create_client(settings.supabase_url, settings.supabase_anon_key)
 
-# Service client for admin operations (bypasses RLS)
 supabase_admin: Client = create_client(settings.supabase_url, settings.supabase_service_key)
 
 

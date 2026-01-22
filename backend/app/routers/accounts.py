@@ -21,7 +21,6 @@ from app.config import get_settings
 router = APIRouter(prefix="/accounts", tags=["accounts"])
 settings = get_settings()
 
-# Simple in-memory state storage (use Redis in production)
 oauth_states: dict[str, str] = {}
 
 
@@ -62,17 +61,11 @@ async def gmail_callback(code: str, state: str):
         )
 
     try:
-        # Exchange code for tokens
         tokens = exchange_code_for_tokens(code)
-
-        # Get user's email address
         service = get_gmail_service(tokens["access_token"], tokens["refresh_token"])
         email_address = get_user_email(service)
-
-        # Store account in database
         supabase = get_supabase_admin()
 
-        # Upsert account (update if exists)
         supabase.table("email_accounts").upsert(
             {
                 "user_id": user_id,
@@ -84,7 +77,6 @@ async def gmail_callback(code: str, state: str):
             on_conflict="user_id,email_address",
         ).execute()
 
-        # Redirect to frontend
         return RedirectResponse(url=f"{settings.app_url}/dashboard?connected=true")
 
     except Exception as e:
@@ -98,7 +90,6 @@ async def sync_emails(account_id: str, current_user: User = Depends(get_current_
     """Sync emails from Gmail and analyze them."""
     supabase = get_supabase_admin()
 
-    # Get account
     account_response = (
         supabase.table("email_accounts")
         .select("*")
@@ -115,10 +106,8 @@ async def sync_emails(account_id: str, current_user: User = Depends(get_current_
 
     account = account_response.data
 
-    # Get Gmail service
     service = get_gmail_service(account["access_token"], account["refresh_token"])
 
-    # Get user preferences for VIP lists
     prefs_response = (
         supabase.table("user_preferences")
         .select("*")
@@ -133,14 +122,12 @@ async def sync_emails(account_id: str, current_user: User = Depends(get_current_
         vip_contacts = prefs_response.data.get("vip_contacts", [])
         vip_domains = prefs_response.data.get("vip_domains", [])
 
-    # Fetch recent emails
     messages, _ = fetch_emails(service, max_results=30)
 
     synced_count = 0
     analyzed_count = 0
 
     for msg in messages:
-        # Check if email already exists
         existing = (
             supabase.table("emails")
             .select("id")
@@ -152,11 +139,9 @@ async def sync_emails(account_id: str, current_user: User = Depends(get_current_
         if existing.data:
             continue
 
-        # Get full email details
         full_message = get_email_details(service, msg["id"])
         email_data = parse_email(full_message, account_id)
 
-        # Store email
         insert_response = (
             supabase.table("emails")
             .insert(
@@ -193,7 +178,6 @@ async def sync_emails(account_id: str, current_user: User = Depends(get_current_
                 vip_domains=vip_domains,
             )
 
-            # Store analysis
             supabase.table("email_analysis").insert(
                 {
                     "email_id": email_id,
@@ -206,7 +190,6 @@ async def sync_emails(account_id: str, current_user: User = Depends(get_current_
 
             analyzed_count += 1
 
-    # Update last sync time
     supabase.table("email_accounts").update(
         {"last_sync_at": datetime.now(timezone.utc).isoformat()}
     ).eq("id", account_id).execute()

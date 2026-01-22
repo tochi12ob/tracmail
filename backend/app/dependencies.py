@@ -14,7 +14,6 @@ async def get_current_user(
     supabase = get_supabase()
 
     try:
-        # Verify the token with Supabase
         response = supabase.auth.get_user(token)
 
         if not response.user:

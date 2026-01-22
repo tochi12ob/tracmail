@@ -39,7 +39,6 @@ async def list_emails(
 
     account_ids = [a["id"] for a in accounts_response.data]
 
-    # Build query for emails with analysis
     query = (
         supabase.table("emails")
         .select("*, email_analysis(*)")
@@ -53,14 +52,12 @@ async def list_emails(
 
     emails_response = query.execute()
 
-    # Filter by priority if specified (done in Python since it's in related table)
     results = []
     for email in emails_response.data:
         analysis = email.pop("email_analysis", None)
         if analysis and len(analysis) > 0:
             analysis_data = analysis[0]
 
-            # Apply priority filters
             if min_priority is not None and analysis_data["priority_score"] < min_priority:
                 continue
             if max_priority is not None and analysis_data["priority_score"] > max_priority:
@@ -68,7 +65,6 @@ async def list_emails(
 
             results.append(EmailWithAnalysis(**email, analysis=analysis_data))
         else:
-            # Include emails without analysis if no priority filter
             if min_priority is None and max_priority is None:
                 results.append(EmailWithAnalysis(**email, analysis=None))
 
@@ -95,7 +91,6 @@ async def get_email(email_id: str, current_user: User = Depends(get_current_user
     """Get a single email with its analysis."""
     supabase = get_supabase_admin()
 
-    # Get user's account IDs
     accounts_response = (
         supabase.table("email_accounts")
         .select("id")
@@ -105,7 +100,6 @@ async def get_email(email_id: str, current_user: User = Depends(get_current_user
 
     account_ids = [a["id"] for a in accounts_response.data]
 
-    # Get email
     email_response = (
         supabase.table("emails")
         .select("*, email_analysis(*)")
@@ -136,7 +130,6 @@ async def submit_feedback(
     """Submit feedback on priority scoring accuracy."""
     supabase = get_supabase_admin()
 
-    # Verify email belongs to user
     accounts_response = (
         supabase.table("email_accounts")
         .select("id")
@@ -159,7 +152,6 @@ async def submit_feedback(
             status_code=status.HTTP_404_NOT_FOUND, detail="Email not found"
         )
 
-    # Update analysis with feedback if actual priority provided
     if feedback.actual_priority is not None:
         supabase.table("email_analysis").update(
             {"priority_score": feedback.actual_priority}
@@ -182,7 +174,6 @@ async def get_preferences(current_user: User = Depends(get_current_user)):
     )
 
     if not response.data:
-        # Create default preferences
         insert_response = (
             supabase.table("user_preferences")
             .insert(
@@ -219,7 +210,6 @@ async def update_preferences(
             detail="No fields to update",
         )
 
-    # Upsert preferences
     response = (
         supabase.table("user_preferences")
         .upsert(

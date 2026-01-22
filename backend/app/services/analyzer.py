@@ -97,7 +97,6 @@ def analyze_email(
             },
         )
 
-    # Use GPT-4 for detailed analysis
     prompt = ANALYSIS_PROMPT.format(
         sender_email=sender_email,
         sender_name=sender_name or "Unknown",
@@ -124,7 +123,6 @@ def analyze_email(
 
         result_text = response.choices[0].message.content.strip()
 
-        # Parse JSON response
         if result_text.startswith("```"):
             result_text = result_text.split("```")[1]
             if result_text.startswith("json"):
@@ -141,7 +139,6 @@ def analyze_email(
         )
 
     except Exception as e:
-        # Fallback analysis on error
         return EmailAnalysisCreate(
             email_id=email_id,
             priority_score=50,

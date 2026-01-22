@@ -113,7 +113,6 @@ def parse_email(message: dict, account_id: str) -> EmailCreate:
     """Parse Gmail message into EmailCreate schema."""
     headers = {h["name"].lower(): h["value"] for h in message["payload"]["headers"]}
 
-    # Extract sender info
     from_header = headers.get("from", "")
     sender_email = from_header
     sender_name = None
@@ -122,10 +121,8 @@ def parse_email(message: dict, account_id: str) -> EmailCreate:
         sender_name = from_header.split("<")[0].strip().strip('"')
         sender_email = from_header.split("<")[1].split(">")[0]
 
-    # Extract body text
     body_text = extract_body_text(message["payload"])
 
-    # Parse date
     internal_date = int(message.get("internalDate", 0))
     received_at = datetime.fromtimestamp(internal_date / 1000, tz=timezone.utc)
 

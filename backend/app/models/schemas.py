@@ -3,7 +3,6 @@ from typing import Optional
 from datetime import datetime
 
 
-# Auth
 class User(BaseModel):
     id: str
     email: str
@@ -13,7 +12,6 @@ class TokenVerifyRequest(BaseModel):
     access_token: str
 
 
-# Email Accounts
 class EmailAccountBase(BaseModel):
     email_address: str
 
@@ -38,7 +36,6 @@ class GmailAuthUrl(BaseModel):
     auth_url: str
 
 
-# Emails
 class EmailBase(BaseModel):
     gmail_id: str
     thread_id: str
@@ -66,7 +63,6 @@ class Email(EmailBase):
         from_attributes = True
 
 
-# Email Analysis
 class EmailAnalysisBase(BaseModel):
     priority_score: int
     explanation: str
@@ -91,7 +87,6 @@ class EmailWithAnalysis(Email):
     analysis: Optional[EmailAnalysis] = None
 
 
-# User Preferences
 class UserPreferences(BaseModel):
     id: str
     user_id: str
@@ -104,13 +99,11 @@ class UserPreferencesUpdate(BaseModel):
     vip_domains: Optional[list[str]] = None
 
 
-# Feedback
 class PriorityFeedback(BaseModel):
     is_correct: bool
     actual_priority: Optional[int] = None
 
 
-# Sync Response
 class SyncResponse(BaseModel):
     synced_count: int
     analyzed_count: int
